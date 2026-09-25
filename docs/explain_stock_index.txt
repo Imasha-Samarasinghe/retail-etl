@@ -1,0 +1,40 @@
+﻿DROP INDEX
+                                                                 QUERY PLAN                                                                  
+---------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=14842.10..14842.11 rows=1 width=40) (actual time=81.690..85.935 rows=1 loops=1)
+   Buffers: shared hit=8512
+   ->  Gather  (cost=14841.88..14842.09 rows=2 width=40) (actual time=81.671..85.918 rows=3 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=8512
+         ->  Partial Aggregate  (cost=13841.88..13841.89 rows=1 width=40) (actual time=73.401..73.403 rows=1 loops=3)
+               Buffers: shared hit=8512
+               ->  Parallel Seq Scan on invoice_lines  (cost=0.00..13831.45 rows=2085 width=6) (actual time=0.068..72.656 rows=1915 loops=3)
+                     Filter: (stock_code = '85123A'::text)
+                     Rows Removed by Filter: 338530
+                     Buffers: shared hit=8512
+ Planning:
+   Buffers: shared hit=89 dirtied=1
+ Planning Time: 0.980 ms
+ Execution Time: 86.301 ms
+(16 rows)
+
+CREATE INDEX
+ANALYZE
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=4395.80..4395.81 rows=1 width=40) (actual time=10.348..10.349 rows=1 loops=1)
+   Buffers: shared hit=4152 read=8
+   ->  Bitmap Heap Scan on invoice_lines  (cost=48.14..4368.56 rows=5447 width=6) (actual time=2.350..8.489 rows=5744 loops=1)
+         Recheck Cond: (stock_code = '85123A'::text)
+         Heap Blocks: exact=4152
+         Buffers: shared hit=4152 read=8
+         ->  Bitmap Index Scan on idx_lines_stock  (cost=0.00..46.78 rows=5447 width=0) (actual time=1.163..1.163 rows=5744 loops=1)
+               Index Cond: (stock_code = '85123A'::text)
+               Buffers: shared read=8
+ Planning:
+   Buffers: shared hit=12 read=1
+ Planning Time: 0.311 ms
+ Execution Time: 10.397 ms
+(13 rows)
+

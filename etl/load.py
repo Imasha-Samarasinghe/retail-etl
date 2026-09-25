@@ -83,3 +83,13 @@ def load(clean) -> int:
         conn.close()
     log.info("Inserted %s new invoice lines", inserted)
     return inserted
+
+
+def refresh_views():
+    conn = get_conn()
+    try:
+        with conn, conn.cursor() as cur:
+            cur.execute("REFRESH MATERIALIZED VIEW mv_product_revenue")
+    finally:
+        conn.close()
+    log.info("Refreshed materialized view mv_product_revenue")

@@ -11,5 +11,6 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    command: postgres -c random_page_cost=1.1
 volumes:
   pgdata:

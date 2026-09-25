@@ -1,0 +1,14 @@
+2026-09-25 08:15:22,399 | INFO | botocore.credentials | Found credentials in environment variables.
+2026-09-25 08:15:46,264 | INFO | etl.s3_utils | S3 upload: C:\Users\Isuru\Desktop\retail-etl\data\raw\online_retail_II.csv -> s3://retail-etl-chathu-2026/raw/run_id=1/online_retail_II.csv.gz
+2026-09-25 08:15:50,046 | INFO | pipeline | EXTRACT  rows read: 1067371 (36.8s)
+2026-09-25 08:15:59,154 | INFO | pipeline | TRANSFORM standardized (45.9s)
+2026-09-25 08:16:00,519 | INFO | pipeline | VALIDATE clean: 1021334 | rejected: 46037
+2026-09-25 08:16:00,523 | INFO | pipeline |    reject reason duplicate            34337
+2026-09-25 08:16:00,523 | INFO | pipeline |    reject reason non_product_code     5713
+2026-09-25 08:16:00,524 | INFO | pipeline |    reject reason bad_quantity         3393
+2026-09-25 08:16:00,524 | INFO | pipeline |    reject reason bad_price            2594
+2026-09-25 08:16:15,434 | INFO | etl.s3_utils | S3 upload: C:\Users\Isuru\Desktop\retail-etl\data\clean\clean.parquet -> s3://retail-etl-chathu-2026/clean/run_id=1/clean.parquet
+2026-09-25 08:16:23,813 | INFO | etl.s3_utils | S3 upload: C:\Users\Isuru\Desktop\retail-etl\data\rejected\rejects.csv -> s3://retail-etl-chathu-2026/rejected/run_id=1/rejects.csv
+2026-09-25 08:17:32,796 | INFO | etl.load | Inserted 1021334 new invoice lines
+2026-09-25 08:17:33,360 | INFO | etl.load | Refreshed materialized view mv_product_revenue
+2026-09-25 08:17:33,399 | INFO | pipeline | DONE run 1 | read 1067371 = clean 1021334 + rejected 46037 | loaded 1021334 | 140.2s
