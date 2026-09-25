@@ -9,23 +9,9 @@ Python 3.11 (pandas, psycopg2, boto3, pyarrow, pytest), PostgreSQL 16 in Docker,
 
 A raw CSV goes in. Python extracts it, standardizes the types and text, then validates it — valid rows go one way, invalid rows go the other way with a reason attached. Both, plus the original raw file, get uploaded to S3. The clean data gets loaded into Postgres. From there I refresh a materialized view and run some analytical queries against it.
 
-```mermaid
-flowchart LR
-    A[Raw CSV] --> B[Extract]
-    B --> C[Transform]
-    C --> D{Validate}
-    D -->|valid| E[clean.parquet]
-    D -->|invalid + reason| F[rejects.csv]
-    A -.-> S1[(S3 raw/)]
-    E -.-> S2[(S3 clean/)]
-    F -.-> S3[(S3 rejected/)]
-    E --> G[Load: COPY + upsert]
-    G --> H[(Postgres)]
-    H --> I[Materialized view]
-    H --> J[Analytical queries]
-```
 
-I also drew a proper diagram — see `docs/architecture.png`.
+I also drew a proper diagram.
+![Retail ETL Pipeline Architecture](docs/architecture.png)
 
 Every run gets a `run_id`, logged in an `etl_runs` table and reused as the S3 key prefix, so I can trace any uploaded file back to the exact run that produced it.
 
