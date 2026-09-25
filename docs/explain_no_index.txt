@@ -1,0 +1,94 @@
+﻿ANALYZE
+                                                                                 QUERY PLAN                                                                                 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=20358.24..20358.27 rows=10 width=38) (actual time=933.479..933.688 rows=10 loops=1)
+   Buffers: shared hit=860 read=8939
+   ->  Sort  (cost=20358.24..20370.11 rows=4747 width=38) (actual time=933.477..933.685 rows=10 loops=1)
+         Sort Key: (sum(l.line_total)) DESC
+         Sort Method: top-N heapsort  Memory: 25kB
+         Buffers: shared hit=860 read=8939
+         ->  Finalize HashAggregate  (cost=20196.33..20255.66 rows=4747 width=38) (actual time=930.355..932.426 rows=4733 loops=1)
+               Group Key: p.stock_code
+               Batches: 1  Memory Usage: 2257kB
+               Buffers: shared hit=860 read=8939
+               ->  Gather  (cost=19116.38..20125.12 rows=9494 width=38) (actual time=909.395..915.052 rows=13664 loops=1)
+                     Workers Planned: 2
+                     Workers Launched: 2
+                     Buffers: shared hit=860 read=8939
+                     ->  Partial HashAggregate  (cost=18116.38..18175.72 rows=4747 width=38) (actual time=900.242..903.358 rows=4555 loops=3)
+                           Group Key: p.stock_code
+                           Batches: 1  Memory Usage: 2001kB
+                           Buffers: shared hit=860 read=8939
+                           Worker 0:  Batches: 1  Memory Usage: 2001kB
+                           Worker 1:  Batches: 1  Memory Usage: 2001kB
+                           ->  Hash Join  (cost=1497.22..16323.87 rows=358502 width=12) (actual time=35.235..604.816 rows=334473 loops=3)
+                                 Hash Cond: (l.stock_code = p.stock_code)
+                                 Buffers: shared hit=860 read=8939
+                                 ->  Hash Join  (cost=1351.41..15236.15 rows=358502 width=12) (actual time=32.040..375.609 rows=334473 loops=3)
+                                       Hash Cond: (l.invoice_no = i.invoice_no)
+                                       Buffers: shared hit=776 read=8900
+                                       ->  Parallel Seq Scan on invoice_lines l  (cost=0.00..12767.56 rows=425556 width=19) (actual time=0.042..97.872 rows=340445 loops=3)
+                                             Buffers: shared read=8512
+                                       ->  Hash  (cost=857.26..857.26 rows=39532 width=7) (actual time=31.419..31.420 rows=39520 loops=3)
+                                             Buckets: 65536  Batches: 1  Memory Usage: 2018kB
+                                             Buffers: shared hit=776 read=388
+                                             ->  Seq Scan on invoices i  (cost=0.00..857.26 rows=39532 width=7) (actual time=0.052..14.597 rows=39520 loops=3)
+                                                   Filter: (NOT is_cancellation)
+                                                   Rows Removed by Filter: 7406
+                                                   Buffers: shared hit=776 read=388
+                                 ->  Hash  (cost=86.47..86.47 rows=4747 width=6) (actual time=3.128..3.129 rows=4747 loops=3)
+                                       Buckets: 8192  Batches: 1  Memory Usage: 242kB
+                                       Buffers: shared hit=78 read=39
+                                       ->  Seq Scan on products p  (cost=0.00..86.47 rows=4747 width=6) (actual time=0.027..1.437 rows=4747 loops=3)
+                                             Buffers: shared hit=78 read=39
+ Planning:
+   Buffers: shared hit=107 read=19
+ Planning Time: 6.387 ms
+ Execution Time: 934.080 ms
+(44 rows)
+
+                                                                                              QUERY PLAN                                                                                              
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=17588.00..18150.69 rows=41 width=54) (actual time=298.255..338.197 rows=22 loops=1)
+   Group Key: i.country
+   Buffers: shared hit=11185 read=1013, temp read=383 written=384
+   ->  Sort  (cost=17588.00..17728.55 rows=56218 width=27) (actual time=298.218..315.745 rows=81726 loops=1)
+         Sort Key: i.country, i.invoice_no
+         Sort Method: external merge  Disk: 3064kB
+         Buffers: shared hit=11185 read=1013, temp read=383 written=384
+         ->  Nested Loop  (cost=0.42..13152.75 rows=56218 width=27) (actual time=6.265..152.583 rows=81726 loops=1)
+               Buffers: shared hit=11185 read=1013
+               ->  Seq Scan on invoices i  (cost=0.00..1091.89 rows=2583 width=21) (actual time=5.365..6.478 rows=2751 loops=1)
+                     Filter: ((NOT is_cancellation) AND (invoice_date >= '2011-11-01 00:00:00'::timestamp without time zone) AND (invoice_date < '2011-12-01 00:00:00'::timestamp without time zone))
+                     Rows Removed by Filter: 44175
+                     Buffers: shared hit=388
+               ->  Index Scan using invoice_lines_pkey on invoice_lines l  (cost=0.42..4.24 rows=43 width=13) (actual time=0.039..0.047 rows=30 loops=2751)
+                     Index Cond: (invoice_no = i.invoice_no)
+                     Buffers: shared hit=10797 read=1013
+ Planning:
+   Buffers: shared hit=29 read=1
+ Planning Time: 0.492 ms
+ Execution Time: 339.133 ms
+(20 rows)
+
+                                                                      QUERY PLAN                                                                      
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=6960.62..6966.34 rows=458 width=39) (actual time=204.785..204.962 rows=466 loops=1)
+   Group Key: i.invoice_no
+   Batches: 1  Memory Usage: 297kB
+   Buffers: shared hit=1532 read=824
+   ->  Nested Loop  (cost=0.42..6910.78 rows=9968 width=13) (actual time=1.228..199.947 rows=11252 loops=1)
+         Buffers: shared hit=1532 read=824
+         ->  Seq Scan on invoices i  (cost=0.00..974.58 rows=458 width=7) (actual time=0.027..4.479 rows=466 loops=1)
+               Filter: (customer_id = 14911)
+               Rows Removed by Filter: 46460
+               Buffers: shared hit=388
+         ->  Index Scan using invoice_lines_pkey on invoice_lines l  (cost=0.42..12.53 rows=43 width=13) (actual time=0.395..0.414 rows=24 loops=466)
+               Index Cond: (invoice_no = i.invoice_no)
+               Buffers: shared hit=1144 read=824
+ Planning:
+   Buffers: shared hit=19
+ Planning Time: 1.124 ms
+ Execution Time: 205.161 ms
+(17 rows)
+

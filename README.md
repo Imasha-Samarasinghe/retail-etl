@@ -160,10 +160,10 @@ I benchmarked with `EXPLAIN (ANALYZE, BUFFERS)` before and after adding indexes 
 
 | Query | No indexes | Indexed + tuned | What happened |
 |---|---|---|---|
-| Top 10 products by revenue | ~875 ms | ~720-1040 ms | Basically unchanged — this query touches most of the table, so an index can't help |
+| Top 10 products by revenue | ~934 ms | ~930-1040 ms | Basically unchanged — this query touches most of the table, so an index can't help |
 | Same query, via materialized view | n/a | **~0.22 ms** | Pre-aggregating the data instead of indexing it |
-| Avg order value, one month | ~296 ms | ~224-273 ms | Index gets used on `invoices`, but the join against `invoice_lines` still dominates |
-| One customer's order history | ~161 ms | **~15 ms** | Planner switched to a nested loop using the index |
+| Avg order value, one month | ~339 ms | ~224-273 ms | Index gets used on `invoices`, but the join against `invoice_lines` still dominates |
+| One customer's order history | ~205 ms | **~15 ms** | Planner switched to using the index once tuned for SSD, about 13x faster |
 | Product lookup by stock code | ~86 ms | **~10.4 ms** | Sequential scan → bitmap index scan, about 8x |
 
 The most interesting part wasn't the wins, it was figuring out why one of my indexes wasn't being used at all. I'd created an index on `customer_id`, confirmed it existed, and the planner still ran a full table scan. Turns out Postgres defaults to assuming disks are slow to seek randomly (`random_page_cost = 4`), which made it think scanning was cheaper than jumping around with an index — true on spinning disks, not true on the SSD my Docker container runs on. I set `random_page_cost = 1.1` in `docker-compose.yml` and the planner switched to using the index, dropping that query from ~160ms to ~15ms.
